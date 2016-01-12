@@ -7,126 +7,60 @@
 var React = require ('react-native');
 var {
   AppRegistry,
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  NavigatorIOS
+  NavigatorIOS,
+  Text
   } = React;
 
+// Pages
+var CustomPullListView = require ('./pages/CustomPullListView');
+var Cells = require('./pages/Cells');
+
+// list
 var PullListView = require ('./components/PullListView');
+var Cell = require ('./components/Cell');
 
-var appleNewsKey = 'dabbdcdba2e477a3c5537675e8107fe6';
-
-var appleNewsUrl = 'http://apis.baidu.com/songshuxiansheng/news/news';
-
-var Examples = React.createClass ({
-  renderRow(news) {
-    return (
-      <TouchableOpacity style={styles.container}>
-        <View style={styles.imageContainer}>
-          <Image source={news.image_url?{uri : news.image_url}:''} style={styles.newsPic}>
-            <View style={styles.titleContainer}>
-              <Text style={styles.newsTitle}>
-                {news.title}
-              </Text>
-            </View>
-          </Image>
-        </View>
-        <View style={{flex: 1}}>
-          <Text style={styles.newsDesc}>
-            {news.abstract || news.title}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
-  },
-  fetchData(done) {
-    fetch (appleNewsUrl, {headers: {apikey: appleNewsKey}}).then ((response) => response.json ()).then ((responseData)=> {
-      done (responseData.retData);
-    }).done ();
-  },
+var HomeList = React.createClass ({
   initData(done) {
-    this.fetchData (done);
+    done ([{
+      title: 'CustomPullListView',
+      component: CustomPullListView
+    }, {
+      title: 'Cells',
+      component: Cells
+    }]);
   },
-  handleRefresh(done) {
-    this.fetchData (done);
-  },
-  handleLoadMore(done) {
-    this.fetchData (done);
+  renderRow(data) {
+    return (
+      <Cell type={Cell.cellTypes.WITH_ACCESSORY} touchable={true} onPress={() => this.props.navigator.push(data)}>
+        <Text>{data.title}</Text>
+      </Cell>
+    );
   },
   render() {
     return (
       <PullListView
         initData={this.initData}
-        onRefresh={this.handleRefresh}
-        onLoadMore={this.handleLoadMore}
-        renderRow={this.renderRow}
-        contentInset={{top: 64}}
+        enableRefresh={false}
         enableLoadMore={false}
+        renderRow={this.renderRow}
+        bounces={false}
+        contentInset={{top: 64}}
       />
     );
   }
 });
 
 var Navigation = React.createClass ({
-    render: function () {
-      return (
-        <NavigatorIOS
-          style={{flex: 1}}
-          initialRoute={{
-          component : Examples,
+  render () {
+    return (
+      <NavigatorIOS
+        style={{flex: 1}}
+        initialRoute={{
+          component : HomeList,
           title: "Home"
         }}
-        />
-      )
-    }
-  }
-);
-
-var styles = StyleSheet.create ({
-  list: {
-    flex: 1
-  },
-  container: {
-    overflow: 'hidden'
-  },
-  imageContainer: {
-    flex: 1,
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#888888'
-  },
-
-  newsPic: {
-    backgroundColor: '#eee',
-    height: 200,
-    marginTop: 0
-  },
-
-  titleContainer: {
-    backgroundColor: '#000000AA',
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-
-  newsTitle: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    lineHeight: 30,
-    paddingVertical: 5,
-    paddingBottom: 10,
-    paddingTop: 5
-  },
-
-  newsDesc: {
-    color: '#333333',
-    fontSize: 16,
-    lineHeight: 24,
-    paddingHorizontal: 10,
-    paddingTop: 4,
-    paddingBottom: 10
+      />
+    )
   }
 });
 

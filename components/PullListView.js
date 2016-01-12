@@ -13,22 +13,22 @@ var REQUEST_URL = 'http://api.juheapi.com/japi/toh?key=2817c984cd4ae64134def75e1
 var {ListView, View, Text, StyleSheet, UIManager, Image} = React;
 
 var headerStatuses = {
-  normal: 0,
-  pullDownToRelease: 1,
-  pullDownReleased: 2,
-  notDisplay: 3
+  NORMAL: 0,
+  PULL_DOWN_TO_RELEASE: 1,
+  PULL_DOWN_RELEASED: 2,
+  NOT_DISPLAY: 3
 };
 var footerStatuses = {
-  normal: 0,
-  pullUpToRelease: 1,
-  pullUpReleased: 2,
-  noMore: 3,
-  notDisplay: 4
+  NORMAL: 0,
+  PULL_UP_TO_RELEASE: 1,
+  PULL_UP_RELEASED: 2,
+  NO_MORE: 3,
+  NOT_DISPLAY: 4
 };
 
 var Header = React.createClass ({
   render() {
-    if (this.props.status == headerStatuses.notDisplay) return null;
+    if (this.props.status == headerStatuses.NOT_DISPLAY) return null;
     const Component = this.props.component || React.createClass ({
         render() {
           return <Text style={styles.header}>{text}</Text>
@@ -37,13 +37,13 @@ var Header = React.createClass ({
     if (!this.props.component) {
       var text;
       switch (this.props.status) {
-        case headerStatuses.normal:
+        case headerStatuses.NORMAL:
           text = 'Pull down to refresh';
           break;
-        case headerStatuses.pullDownToRelease:
+        case headerStatuses.PULL_DOWN_TO_RELEASE:
           text = 'Release to refresh';
           break;
-        case headerStatuses.pullDownReleased:
+        case headerStatuses.PULL_DOWN_RELEASED:
           text = 'Refreshing';
           break;
       }
@@ -60,7 +60,7 @@ var Header = React.createClass ({
 
 var Footer = React.createClass ({
   render() {
-    if (this.props.offset == undefined || this.props.status == footerStatuses.notDisplay) return null;
+    if (this.props.offset == undefined || this.props.status == footerStatuses.NOT_DISPLAY) return null;
     const Component = this.props.component || React.createClass ({
         render() {
           return <Text style={styles.footer}>{text}</Text>
@@ -69,16 +69,16 @@ var Footer = React.createClass ({
     if (!this.props.component) {
       var text;
       switch (this.props.status) {
-        case footerStatuses.normal:
+        case footerStatuses.NORMAL:
           text = 'Pull up to load';
           break;
-        case footerStatuses.pullUpToRelease:
+        case footerStatuses.PULL_UP_TO_RELEASE:
           text = 'Release to load';
           break;
-        case footerStatuses.pullUpReleased:
+        case footerStatuses.PULL_UP_RELEASED:
           text = 'Loading';
           break;
-        case footerStatuses.noMore:
+        case footerStatuses.NO_MORE:
           text = 'No more';
           break;
       }
@@ -144,8 +144,8 @@ module.exports = React.createClass ({
       dataSource: new ListView.DataSource ({
         rowHasChanged: (row1, row2) => row1 !== row2
       }),
-      headerStatus: this.props.enableRefresh ? headerStatuses.pullDownReleased : headerStatuses.notDisplay,
-      footerStatus: this.props.enableLoadMore ? footerStatuses.normal : headerStatuses.notDisplay
+      headerStatus: this.props.enableRefresh ? headerStatuses.PULL_DOWN_RELEASED : headerStatuses.NOT_DISPLAY,
+      footerStatus: this.props.enableLoadMore ? footerStatuses.NORMAL : headerStatuses.NOT_DISPLAY
     };
   },
   initData(data) {
@@ -155,15 +155,15 @@ module.exports = React.createClass ({
     });
     if (this.props.enableRefresh) {
       this.setState ({
-        headerStatus: headerStatuses.normal
+        headerStatus: headerStatuses.NORMAL
       });
-      this.refs.list.getScrollResponder ().scrollTo (0 - this.props.contentInset.top);
+      this.refs.list && this.refs.list.getScrollResponder ().scrollTo (0 - this.props.contentInset.top);
     }
     if (this.props.enableLoadMore) {
       var me = this;
       me.setTimeout (function () {
         me.setState ({
-          footerStatus: footerStatuses.normal
+          footerStatus: footerStatuses.NORMAL
         });
       }, 250);
     }
@@ -172,7 +172,7 @@ module.exports = React.createClass ({
     this.props.initData (this.initData);
   },
   componentDidUpdate() {
-    if (this.props.enableLoadMore) {
+    if (this.props.enableLoadMore && this.refs.list) {
       var me = this;
       setTimeout (function () {
         UIManager.measure (React.findNodeHandle (me.refs.list), (x, y, w, h, offsetX, offsetY) => {
@@ -215,8 +215,8 @@ module.exports = React.createClass ({
         onScroll={this.handleScroll}
         renderHeader={this.renderHeader}
         renderFooter={this.renderFooter}
-        contentOffset={{y: -this.props.headerHeight - this.props.contentInset.top}}
-        style={[this.props.style]}
+        contentOffset={{y: this.props.enableRefresh?(-this.props.headerHeight - this.props.contentInset.top):(-this.props.contentInset.top)}}
+        style={[{backgroundColor: '#EFEFF4'}, this.props.style]}
         automaticallyAdjustContentInsets={false}
       />
     );
@@ -228,30 +228,30 @@ module.exports = React.createClass ({
     var me = this;
     if (this.props.enableRefresh) {
       var headerStatus = this.state.headerStatus;
-      if (headerStatus == headerStatuses.pullDownToRelease) {
+      if (headerStatus == headerStatuses.PULL_DOWN_TO_RELEASE) {
         this.refs.list.getScrollResponder ().scrollTo (-me.props.headerHeight - me.props.contentInset.top);
-        this.setState ({headerStatus: headerStatuses.pullDownReleased, footerStatus: footerStatuses.notDisplay});
+        this.setState ({headerStatus: headerStatuses.PULL_DOWN_RELEASED, footerStatus: footerStatuses.NOT_DISPLAY});
         this.props.onRefresh (me.initData);
       }
     }
     if (this.props.enableLoadMore) {
       var footerStatus = this.state.footerStatus;
-      if (footerStatus == footerStatuses.pullUpToRelease) {
+      if (footerStatus == footerStatuses.PULL_UP_TO_RELEASE) {
         var pullUpReleaseScrollTo = this.state.pullUpReleaseScrollTo;
         this.refs.list.getScrollResponder ().scrollTo (pullUpReleaseScrollTo);
         setTimeout (function () {
-          me.setState ({footerStatus: footerStatuses.pullUpReleased});
+          me.setState ({footerStatus: footerStatuses.PULL_UP_RELEASED});
         });
 
         this.props.onLoadMore (function (data) {
           me.refs.list.getScrollResponder ().scrollTo (pullUpReleaseScrollTo - me.props.footerHeight);
           if (!data || data.length == 0) {
-            return me.setState ({footerStatus: footerStatuses.noMore});
+            return me.setState ({footerStatus: footerStatuses.NO_MORE});
           }
           me.data = me.data.concat (data);
           me.setTimeout (function () {
             me.setState ({
-              footerStatus: footerStatuses.normal,
+              footerStatus: footerStatuses.NORMAL,
               dataSource: me.state.dataSource.cloneWithRows (me.data)
             });
           }, 250);
@@ -263,30 +263,30 @@ module.exports = React.createClass ({
     var nativeEvent = event.nativeEvent;
     var headerStatus = this.state.headerStatus;
     var footerStatus = this.state.footerStatus;
-    if (headerStatus == headerStatuses.pullDownReleased || footerStatus == footerStatuses.pullUpReleased) return;
-    var y = nativeEvent.contentInset.top + nativeEvent.contentOffset.y;
+    if (headerStatus == headerStatuses.PULL_DOWN_RELEASED || footerStatus == footerStatuses.PULL_UP_RELEASED) return;
     if (this.props.enableRefresh) {
+      var y = nativeEvent.contentInset.top + nativeEvent.contentOffset.y;
       var pullDownRelease = -this.props.headerHeight - this.props.headerReleaseDistance;
-      if (y <= pullDownRelease && headerStatus == headerStatuses.normal) {
-        this.setState ({headerStatus: headerStatuses.pullDownToRelease});
-      } else if (y > pullDownRelease && headerStatus == headerStatuses.pullDownToRelease) {
-        this.setState ({headerStatus: headerStatuses.normal});
-      } else if (y > -this.props.headerHeight && headerStatus == headerStatuses.pullDownReleased) {
-        this.setState ({headerStatus: headerStatuses.normal});
+      if (y <= pullDownRelease && headerStatus == headerStatuses.NORMAL) {
+        this.setState ({headerStatus: headerStatuses.PULL_DOWN_TO_RELEASE});
+      } else if (y > pullDownRelease && headerStatus == headerStatuses.PULL_DOWN_TO_RELEASE) {
+        this.setState ({headerStatus: headerStatuses.NORMAL});
+      } else if (y > -this.props.headerHeight && headerStatus == headerStatuses.PULL_DOWN_RELEASED) {
+        this.setState ({headerStatus: headerStatuses.NORMAL});
       }
     }
 
     if (this.props.enableLoadMore) {
-      if (footerStatus == footerStatuses.noMore) return;
+      if (footerStatus == footerStatuses.NO_MORE) return;
       var footerOffset = this.state.footerOffset;
       if (footerOffset != 'undefined') {
+        var y = nativeEvent.contentOffset.y + nativeEvent.layoutMeasurement.height - nativeEvent.contentSize.height - this.state.footerOffset;
         var pullUpRelease = this.props.footerHeight + this.props.footerReleaseDistance;
-        y = y + nativeEvent.layoutMeasurement.height - nativeEvent.contentSize.height - this.state.footerOffset;
-        if (y >= pullUpRelease && footerStatus == footerStatuses.normal) {
-          this.setState ({footerStatus: footerStatuses.pullUpToRelease});
+        if (y >= pullUpRelease && footerStatus == footerStatuses.NORMAL) {
+          this.setState ({footerStatus: footerStatuses.PULL_UP_TO_RELEASE});
           this.setState ({pullUpReleaseScrollTo: nativeEvent.contentSize.height - nativeEvent.layoutMeasurement.height + this.state.footerOffset + this.props.footerHeight});
-        } else if (y < this.props.footerHeight && footerStatus == footerStatuses.pullUpToRelease) {
-          this.setState ({footerStatus: footerStatuses.normal});
+        } else if (y < this.props.footerHeight && footerStatus == footerStatuses.PULL_UP_TO_RELEASE) {
+          this.setState ({footerStatus: footerStatuses.NORMAL});
         }
       }
     }
